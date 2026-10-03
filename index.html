@@ -21,37 +21,46 @@
 
     nameInput.value = "user" + Math.floor(Math.random() * 100);
 
-    const ws = new WebSocket("ws://localhost:8080");
+    let ws;
+    let retryDelay = 1000; // grows on each failed attempt
 
-    ws.addEventListener("open", () => {
-      statusEl.textContent = "connected";
-    });
+    function connect() {
+      ws = new WebSocket("ws://localhost:8080");
 
-    ws.addEventListener("close", () => {
-      statusEl.textContent = "disconnected";
-    });
+      ws.addEventListener("open", () => {
+        statusEl.textContent = "connected";
+        retryDelay = 1000; // reset after a successful connection
+      });
 
-    ws.addEventListener("error", () => {
-      statusEl.textContent = "error";
-    });
+      ws.addEventListener("close", () => {
+        statusEl.textContent = `disconnected, retrying in ${retryDelay / 1000}s…`;
+        setTimeout(connect, retryDelay);
+        retryDelay = Math.min(retryDelay * 2, 10000); // cap at 10s
+      });
 
-    ws.addEventListener("message", (event) => {
-      const msg = JSON.parse(event.data);
+      ws.addEventListener("error", () => {
+        // a "close" event always follows, which handles the retry
+        statusEl.textContent = "error";
+      });
 
-      if (msg.type === "chat") {
-        const li = document.createElement("li");
-        li.textContent = `[${msg.time}] ${msg.name}: ${msg.text}`;
-        messagesEl.appendChild(li);
-      }
+      ws.addEventListener("message", (event) => {
+        const msg = JSON.parse(event.data);
 
-      if (msg.type === "count") {
-        statusEl.textContent = `connected, ${msg.count} online`;
-      }
-    });
+        if (msg.type === "chat") {
+          const li = document.createElement("li");
+          li.textContent = `[${msg.time}] ${msg.name}: ${msg.text}`;
+          messagesEl.appendChild(li);
+        }
+
+        if (msg.type === "count") {
+          statusEl.textContent = `connected, ${msg.count} online`;
+        }
+      });
+    }
 
     function sendMessage() {
       const text = textInput.value.trim();
-      if (!text || ws.readyState !== WebSocket.OPEN) return;
+      if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
       ws.send(JSON.stringify({ type: "chat", name: nameInput.value, text }));
       textInput.value = "";
     }
@@ -61,6 +70,8 @@
     textInput.addEventListener("keydown", (event) => {
       if (event.key === "Enter") sendMessage();
     });
+
+    connect();
   </script>
 </body>
 </html>
