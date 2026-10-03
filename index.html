@@ -7,56 +7,60 @@
 <body>
   <h1>WebSocket Chat</h1>
   <div id="status">connecting…</div>
-  <input type="text" id="textbox" />
-  <button id="send" >Send   </button>
+  <input type="text" id="name" placeholder="Name" size="8" />
+  <input type="text" id="textbox" placeholder="Type a message" />
+  <button id="send">Send</button>
   <ul id="messages"></ul>
 
   <script>
-    const ws_status = document.getElementById("status");
-    const textContent = document.getElementById("textbox");
+    const statusEl = document.getElementById("status");
+    const nameInput = document.getElementById("name");
+    const textInput = document.getElementById("textbox");
     const sendButton = document.getElementById("send");
-    const messageEl = document.getElementById("messages");
+    const messagesEl = document.getElementById("messages");
+
+    nameInput.value = "user" + Math.floor(Math.random() * 100);
 
     const ws = new WebSocket("ws://localhost:8080");
 
-    sendButton.addEventListener("click", () => {
-        const text = textContent.value.trim();
-        ws.send(text);
-        textContent.value = "";
-        messageEl.innerText += text + "\n";
-    })
-
     ws.addEventListener("open", () => {
-      ws_status.textContent = "ws is connected";
+      statusEl.textContent = "connected";
     });
 
-     ws.addEventListener("close", () => {
-       ws_status.textContent = "ws is disconnected";
-     });
+    ws.addEventListener("close", () => {
+      statusEl.textContent = "disconnected";
+    });
 
-     ws.addEventListener("error", (err) => {
-         ws_status.textContent = "error is" + err;
-     })
+    ws.addEventListener("error", () => {
+      statusEl.textContent = "error";
+    });
 
-     ws.addEventListener("message", (message) => {
+    ws.addEventListener("message", (event) => {
+      const msg = JSON.parse(event.data);
+
+      if (msg.type === "chat") {
         const li = document.createElement("li");
-        li.textContent = message.data;
-        messageEl.appendChild(li);
-     });
+        li.textContent = `[${msg.time}] ${msg.name}: ${msg.text}`;
+        messagesEl.appendChild(li);
+      }
 
-     function sendMessage() {
-        const text = textContent.value.trim();
-        if (!text || ws.readyState !== WebSocket.OPEN) return;
-        ws.send(text);
-        textContent.value = "";
-        message.innerText += text + "\n";
-     };
+      if (msg.type === "count") {
+        statusEl.textContent = `connected, ${msg.count} online`;
+      }
+    });
 
-     textContent.addEventListener("keydown" , (event) => {
-        if(event.key === "Enter"){
-            sendMessage();
-        }
-     })
+    function sendMessage() {
+      const text = textInput.value.trim();
+      if (!text || ws.readyState !== WebSocket.OPEN) return;
+      ws.send(JSON.stringify({ type: "chat", name: nameInput.value, text }));
+      textInput.value = "";
+    }
+
+    sendButton.addEventListener("click", sendMessage);
+
+    textInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") sendMessage();
+    });
   </script>
 </body>
 </html>
