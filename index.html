@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>WebSocket Chat</title>
+</head>
+<body>
+  <h1>WebSocket Chat</h1>
+  <div id="status">connecting…</div>
+
+  <script>
+    const ws_status = document.getElementById("status");
+
+    const ws = new WebSocket("ws://localhost:8080");
+
+    // ws.addEventListener("open", () => {
+    //   status.textContent = "connected";
+    // });
+
+    ws.onopen = () => {
+        ws_status.textContent = "ws is connected";
+    }
+
+    ws.onclose = () => {
+        ws_status.textContent = "ws is disconnected";
+    }
+
+    // ws.addEventListener("close", () => {
+    //   status.textContent = "disconnected";
+    // });
+
+  </script>
+</body>
+</html>
