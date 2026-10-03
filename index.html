@@ -7,28 +7,56 @@
 <body>
   <h1>WebSocket Chat</h1>
   <div id="status">connecting…</div>
+  <input type="text" id="textbox" />
+  <button id="send" >Send   </button>
+  <ul id="messages"></ul>
 
   <script>
     const ws_status = document.getElementById("status");
+    const textContent = document.getElementById("textbox");
+    const sendButton = document.getElementById("send");
+    const messageEl = document.getElementById("messages");
 
     const ws = new WebSocket("ws://localhost:8080");
 
-    // ws.addEventListener("open", () => {
-    //   status.textContent = "connected";
-    // });
+    sendButton.addEventListener("click", () => {
+        const text = textContent.value.trim();
+        ws.send(text);
+        textContent.value = "";
+        messageEl.innerText += text + "\n";
+    })
 
-    ws.onopen = () => {
-        ws_status.textContent = "ws is connected";
-    }
+    ws.addEventListener("open", () => {
+      ws_status.textContent = "ws is connected";
+    });
 
-    ws.onclose = () => {
-        ws_status.textContent = "ws is disconnected";
-    }
+     ws.addEventListener("close", () => {
+       ws_status.textContent = "ws is disconnected";
+     });
 
-    // ws.addEventListener("close", () => {
-    //   status.textContent = "disconnected";
-    // });
+     ws.addEventListener("error", (err) => {
+         ws_status.textContent = "error is" + err;
+     })
 
+     ws.addEventListener("message", (message) => {
+        const li = document.createElement("li");
+        li.textContent = message.data;
+        messageEl.appendChild(li);
+     });
+
+     function sendMessage() {
+        const text = textContent.value.trim();
+        if (!text || ws.readyState !== WebSocket.OPEN) return;
+        ws.send(text);
+        textContent.value = "";
+        message.innerText += text + "\n";
+     };
+
+     textContent.addEventListener("keydown" , (event) => {
+        if(event.key === "Enter"){
+            sendMessage();
+        }
+     })
   </script>
 </body>
 </html>
