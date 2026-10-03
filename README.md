@@ -1,6 +1,6 @@
 # WebSocket Chat Room
 
-A real*time chat room built with **WebSockets**, **Node.js** and plain HTML/JavaScript. No frameworks, so the protocol itself is the thing on show.
+A Real time chat room built with **WebSockets**, **Node.js** and plain HTML/JavaScript. No frameworks, so the protocol itself is the thing on show.
 
 ![Demo](assets/demo.gif)
 
