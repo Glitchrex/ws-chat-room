@@ -2,76 +2,64 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>WebSocket Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#04050a" />
+  <title>Signal · WebSocket chat room</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet" />
+
+ <link rel="stylesheet" href="style.css" />
+
 </head>
 <body>
-  <h1>WebSocket Chat</h1>
-  <div id="status">connecting…</div>
-  <input type="text" id="name" placeholder="Name" size="8" />
-  <input type="text" id="textbox" placeholder="Type a message" />
-  <button id="send">Send</button>
-  <ul id="messages"></ul>
+  <div class="aurora" id="aurora" aria-hidden="true">
+    <i class="b1"></i><i class="b2"></i><i class="b3"></i>
+  </div>
 
-  <script>
-    const statusEl = document.getElementById("status");
-    const nameInput = document.getElementById("name");
-    const textInput = document.getElementById("textbox");
-    const sendButton = document.getElementById("send");
-    const messagesEl = document.getElementById("messages");
+  <main class="app">
+    <section class="chat" id="chat" data-state="connecting">
+      <header class="top">
+        <div class="presence" id="presence" aria-hidden="true">
+          <span class="ring"></span><span class="ring"></span>
+          <div class="orbit" id="orbit"></div>
+          <span class="core"></span>
+        </div>
 
-    nameInput.value = "user" + Math.floor(Math.random() * 100);
+        <div class="titles">
+          <h1>Signal</h1>
+          <p id="status">Connecting…</p>
+        </div>
 
-    let ws;
-    let retryDelay = 1000; // grows on each failed attempt
+        <label class="me" title="Your display name">
+          <span class="avatar" id="meAvatar">?</span>
+          <input id="name" maxlength="20" autocomplete="off" spellcheck="false" aria-label="Your name" />
+        </label>
+      </header>
 
-    function connect() {
-      ws = new WebSocket("ws://localhost:8080");
+      <div class="log" id="log" role="log" aria-live="polite" aria-label="Chat messages">
+        <div class="empty" id="empty">
+          <strong>Nothing here yet</strong>
+          Open this page in a second tab, pick a different name and send the first message.
+        </div>
+      </div>
 
-      ws.addEventListener("open", () => {
-        statusEl.textContent = "connected";
-        retryDelay = 1000; // reset after a successful connection
-      });
+      <button class="jump" id="jump" type="button" hidden>New messages</button>
 
-      ws.addEventListener("close", () => {
-        statusEl.textContent = `disconnected, retrying in ${retryDelay / 1000}s…`;
-        setTimeout(connect, retryDelay);
-        retryDelay = Math.min(retryDelay * 2, 10000); // cap at 10s
-      });
-
-      ws.addEventListener("error", () => {
-        // a "close" event always follows, which handles the retry
-        statusEl.textContent = "error";
-      });
-
-      ws.addEventListener("message", (event) => {
-        const msg = JSON.parse(event.data);
-
-        if (msg.type === "chat") {
-          const li = document.createElement("li");
-          li.textContent = `[${msg.time}] ${msg.name}: ${msg.text}`;
-          messagesEl.appendChild(li);
-        }
-
-        if (msg.type === "count") {
-          statusEl.textContent = `connected, ${msg.count} online`;
-        }
-      });
-    }
-
-    function sendMessage() {
-      const text = textInput.value.trim();
-      if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
-      ws.send(JSON.stringify({ type: "chat", name: nameInput.value, text }));
-      textInput.value = "";
-    }
-
-    sendButton.addEventListener("click", sendMessage);
-
-    textInput.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") sendMessage();
-    });
-
-    connect();
-  </script>
+      <form class="composer" id="composer" autocomplete="off">
+        <input id="text" maxlength="500" placeholder="Write a message" aria-label="Message" />
+        <button class="send" id="send" type="submit" aria-label="Send message" disabled>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M22 2 11 13" /><path d="M22 2 15 22l-4-9-9-4 20-7z" />
+          </svg>
+        </button>
+      </form>
+    </section>
+  </main>
+<link rel="modulepreload" href="index.js" />
+<script type="module" src="index.js"></script>
 </body>
 </html>
