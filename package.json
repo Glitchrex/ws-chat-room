@@ -19,6 +19,9 @@
     "url": "https://github.com/Glitchrex/ws-chat-room/issues"
   },
   "homepage": "https://github.com/Glitchrex/ws-chat-room#readme",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "ws": "^8.22.0"
   }

@@ -27,11 +27,11 @@ npm install
 node server.js
 ```
 
-Then open `index.html` in two browser tabs and start chatting.
+Then open http://localhost:8080 in two browser tabs and start chatting. The server serves the page itself and the client connects back to the same host, so the same code works when deployed (e.g. on Railway, which sets `PORT`).
 
 ## How it works
 
-1. The browser opens a connection with `new WebSocket("ws://localhost:8080")`.
+1. The browser opens a connection to the host that served the page (`ws://` locally, `wss://` over HTTPS).
 2. The server keeps every open connection in `wss.clients`.
 3. When a client sends a message, the server validates it and **broadcasts** it to everyone.
 4. Messages are JSON envelopes with a `type` field:

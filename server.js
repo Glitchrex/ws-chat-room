@@ -1,12 +1,41 @@
 const http = require("http");
+const fs = require("fs");
+const path = require("path");
 const { WebSocketServer, WebSocket } = require("ws");
 
 const PORT = process.env.PORT || 8080;
 
-// Tiny HTTP server so the host has something to health-check
+// Static files the browser client needs, served from the same origin as the socket
+const STATIC = {
+  "/": ["index.html", "text/html; charset=utf-8"],
+  "/index.html": ["index.html", "text/html; charset=utf-8"],
+  "/index.js": ["index.js", "text/javascript; charset=utf-8"],
+  "/style.css": ["style.css", "text/css; charset=utf-8"],
+};
+
 const server = http.createServer((req, res) => {
-  res.writeHead(200, { "Content-Type": "text/plain" });
-  res.end("ok");
+  const pathname = new URL(req.url, "http://localhost").pathname;
+
+  // Health check endpoint for the host
+  if (pathname === "/health") {
+    res.writeHead(200, { "Content-Type": "text/plain" });
+    return res.end("ok");
+  }
+
+  const file = STATIC[pathname];
+  if (!file) {
+    res.writeHead(404, { "Content-Type": "text/plain" });
+    return res.end("not found");
+  }
+
+  fs.readFile(path.join(__dirname, file[0]), (err, body) => {
+    if (err) {
+      res.writeHead(500, { "Content-Type": "text/plain" });
+      return res.end("error");
+    }
+    res.writeHead(200, { "Content-Type": file[1] });
+    res.end(body);
+  });
 });
 
 const ws1 = new WebSocketServer({ server });
@@ -22,7 +51,7 @@ function broadcast(data) {
 }
 
 function onlineUsers() {
-  broadcast({ type: "count", count: ws1.clients.size });
+  broadcast({ type: "onlineUsers", count: ws1.clients.size });
 }
 
 ws1.on("connection", (socket) => {

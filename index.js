@@ -1,4 +1,7 @@
-   const WS_URL = "ws://localhost:8080";
+   // Same host as the page when served over http(s); localhost when opened as a file
+    const WS_URL = location.protocol.startsWith("http")
+      ? `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}`
+      : "ws://localhost:8080";
 
     const $ = (id) => document.getElementById(id);
     const chat = $("chat"), statusEl = $("status"), presence = $("presence"), orbit = $("orbit");
